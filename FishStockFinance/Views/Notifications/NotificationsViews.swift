@@ -225,12 +225,12 @@ struct ReminderFormView: View {
 
                                     Spacer()
 
-                                    Text(mode.title)
-                                        .font(.custom("Unbounded-Regular", size: 22))
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(.white)
-                                        .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 5)
-                                        .singleLineScaled(0.5)
+                            Text(mode.title)
+                                .font(.custom("Unbounded-Regular", size: 22))
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 5)
+                                .singleLineScaled(0.5)
 
                                     Spacer()
 

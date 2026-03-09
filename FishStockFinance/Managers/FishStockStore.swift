@@ -104,7 +104,6 @@ final class FishStockStore: ObservableObject {
 
     func addSale(_ sale: SaleRecord) {
         sales.insert(sale, at: 0)
-        
         if let fishId = sale.fishId, let fishIndex = fishes.firstIndex(where: { $0.id == fishId }) {
             let estimatedQuantity = Int(sale.weightKg)
             if estimatedQuantity > 0 {
@@ -129,19 +128,16 @@ final class FishStockStore: ObservableObject {
     func updateSale(_ sale: SaleRecord) {
         guard let index = sales.firstIndex(where: { $0.id == sale.id }) else { return }
         let oldSale = sales[index]
-        
         if let oldFishId = oldSale.fishId, let fishIndex = fishes.firstIndex(where: { $0.id == oldFishId }) {
             let oldQuantity = Int(oldSale.weightKg)
-            if oldQuantity > 0 {
-                if let opIndex = fishes[fishIndex].operations.firstIndex(where: { $0.kind == .sold && abs($0.date.timeIntervalSince(oldSale.date)) < 1 }) {
-                    let oldOp = fishes[fishIndex].operations.remove(at: opIndex)
-                    fishes[fishIndex].quantity = rollbackQuantity(current: fishes[fishIndex].quantity, operation: oldOp)
-                }
+            if oldQuantity > 0,
+               let opIndex = fishes[fishIndex].operations.firstIndex(where: { $0.kind == .sold && abs($0.date.timeIntervalSince(oldSale.date)) < 1 }) {
+                let oldOp = fishes[fishIndex].operations.remove(at: opIndex)
+                fishes[fishIndex].quantity = rollbackQuantity(current: fishes[fishIndex].quantity, operation: oldOp)
             }
         }
         
         sales[index] = sale
-        
         if let fishId = sale.fishId, let fishIndex = fishes.firstIndex(where: { $0.id == fishId }) {
             let newQuantity = Int(sale.weightKg)
             if newQuantity > 0 {
@@ -157,14 +153,12 @@ final class FishStockStore: ObservableObject {
 
     func deleteSale(id: UUID) {
         guard let sale = sales.first(where: { $0.id == id }) else { return }
-        
         if let fishId = sale.fishId, let fishIndex = fishes.firstIndex(where: { $0.id == fishId }) {
             let quantity = Int(sale.weightKg)
-            if quantity > 0 {
-                if let opIndex = fishes[fishIndex].operations.firstIndex(where: { $0.kind == .sold && abs($0.date.timeIntervalSince(sale.date)) < 1 }) {
-                    let operation = fishes[fishIndex].operations.remove(at: opIndex)
-                    fishes[fishIndex].quantity = rollbackQuantity(current: fishes[fishIndex].quantity, operation: operation)
-                }
+            if quantity > 0,
+               let opIndex = fishes[fishIndex].operations.firstIndex(where: { $0.kind == .sold && abs($0.date.timeIntervalSince(sale.date)) < 1 }) {
+                let operation = fishes[fishIndex].operations.remove(at: opIndex)
+                fishes[fishIndex].quantity = rollbackQuantity(current: fishes[fishIndex].quantity, operation: operation)
             }
         }
         

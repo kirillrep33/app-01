@@ -8,11 +8,8 @@ final class SoundManager {
     private var audioPlayer: AVAudioPlayer?
     
     private init() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-        }
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+        try? AVAudioSession.sharedInstance().setActive(true)
     }
     
     func playButtonSound() {
@@ -28,11 +25,11 @@ final class SoundManager {
     }
     
     private func playSound(url: URL) {
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-        } catch {
+        if let player = try? AVAudioPlayer(contentsOf: url) {
+            audioPlayer = player
+            player.prepareToPlay()
+            player.play()
+        } else {
             AudioServicesPlaySystemSound(1104)
         }
     }
