@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Unbounded-Light.ttf</string>
+		<string>Unbounded-SemiBold.ttf</string>
+		<string>Unbounded-Bold.ttf</string>
+		<string>Unbounded-Regular.ttf</string>
+	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>The app needs photo library access so you can choose a fish image.</string>
+</dict>
+</plist>
