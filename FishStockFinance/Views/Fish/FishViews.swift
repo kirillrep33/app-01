@@ -458,14 +458,21 @@ struct FishFormView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @FocusState private var focusedField: Field?
     
+    private var isCompactPhone: Bool {
+        UIScreen.main.bounds.width <= 350
+    }
+    
     enum Field {
         case species, quantity
     }
 
     var body: some View {
             AppBackground {
+            GeometryReader { geometry in
+                let scale = scaleForScreen(size: geometry.size)
+
                 ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: isCompactPhone ? 12 : 16) {
                 GeometryReader { _ in
                     HStack {
                         Button(action: withButtonSound { dismiss() }) {
@@ -484,7 +491,7 @@ struct FishFormView: View {
                         Spacer()
 
                     Text(mode.title)
-                        .font(.custom("Unbounded-Regular", size: 22))
+                        .font(.custom("Unbounded-Regular", size: isCompactPhone ? 20 : 22))
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 5)
@@ -502,7 +509,8 @@ struct FishFormView: View {
                     PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                         Circle()
                             .fill(Color(red: 0.78, green: 0.91, blue: 0.99))
-                            .frame(width: 190, height: 190)
+                            .frame(width: isCompactPhone ? 160 : 190,
+                                   height: isCompactPhone ? 160 : 190)
                             .overlay(
                     Circle()
                                     .stroke(Color.yellow, lineWidth: 3)
@@ -522,13 +530,15 @@ struct FishFormView: View {
                     }
 
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Type:").font(.custom("Unbounded-Regular", size: 20)).fontWeight(.bold)
+                            Text("Type:")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
+                                .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.01, green: 0.08, blue: 0.30))
                         HStack {
                             ZStack(alignment: .leading) {
                                 if species.isEmpty {
                                     Text("type")
-                                        .font(.custom("Unbounded-Regular", size: 20))
+                                        .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
                                         .foregroundColor(Color(red: 0.01, green: 0.08, blue: 0.30).opacity(0.5))
                                 }
                                 TextField("", text: $species)
@@ -549,18 +559,18 @@ struct FishFormView: View {
                                 .background(Color.white)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                            Text("Initial Quantity:").font(.custom("Unbounded-Regular", size: 20)).fontWeight(.bold)
+                            Text("Initial Quantity:")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
+                                .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.01, green: 0.08, blue: 0.30))
                         HStack {
                             ZStack(alignment: .leading) {
                                 if quantity.isEmpty {
                                     Text("initial quantity")
-                                        .font(.custom("Unbounded-Regular", size: 20))
+                                        .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
                                         .foregroundColor(Color(red: 0.01, green: 0.08, blue: 0.30).opacity(0.5))
                                 }
-                                TextField("", text: $quantity)
-                                    .focused($focusedField, equals: .quantity)
-                                    .keyboardType(.numberPad)
+                                NumericTextField(text: $quantity, keyboardType: .numberPad)
                             }
                             Image(systemName: "pencil")
                                 .foregroundColor(Color(red: 0.78, green: 0.91, blue: 0.99))
@@ -569,7 +579,9 @@ struct FishFormView: View {
                                 .background(Color.white)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                            Text("Age Group:").font(.custom("Unbounded-Regular", size: 20)).fontWeight(.bold)
+                            Text("Age Group:")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
+                                .fontWeight(.bold)
                             .foregroundColor(Color(red: 0.01, green: 0.08, blue: 0.30))
                         Menu {
                             ForEach(FishAgeGroup.allCases) { group in
@@ -582,7 +594,7 @@ struct FishFormView: View {
                         } label: {
                             HStack {
                                 Text(ageGroup.rawValue)
-                                    .font(.custom("Unbounded-Regular", size: 20))
+                                    .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
                                     .foregroundColor(.gray)
                                 Spacer()
                                 Image(systemName: "chevron.down")
@@ -612,10 +624,16 @@ struct FishFormView: View {
                         dismiss()
                     }
 
-                    Spacer()
+                    Spacer(minLength: 80)
                 }
+                .padding(.bottom, 16)
                 }
                 .verticalBounceBasedOnSizeIfAvailable()
+                // Масштабируем экран от верхнего края, чтобы на SE не появлялся
+                // лишний «пустой» отступ сверху при уменьшении контента.
+                .scaleEffect(scale, anchor: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
         }
         .onChange(of: selectedPhotoItem) { newValue in
             guard let newValue else { return }
@@ -637,6 +655,22 @@ struct FishFormView: View {
             ageGroup = fish.ageGroup
             selectedImageData = fish.imageData
         }
+    }
+
+    private func scaleForScreen(size: CGSize) -> CGFloat {
+        let requiredHeight: CGFloat = 780
+        let topPadding: CGFloat = isCompactPhone ? 80 : 110
+        let bottomPadding: CGFloat = isCompactPhone ? 24 : 40
+        let availableHeight = size.height - topPadding - bottomPadding
+        let heightScale = min(1.0, availableHeight / requiredHeight)
+
+        let horizontalPadding: CGFloat = isCompactPhone ? 24 : 36
+        let widthScale = min(1.0, (size.width - horizontalPadding) / 404)
+
+        let scale = min(heightScale, widthScale)
+        // Чуть ослабляем масштабирование на SE, чтобы форма оставалась крупной.
+        let minScale: CGFloat = isCompactPhone ? 0.8 : 0.9
+        return max(minScale, scale)
     }
 }
 
@@ -703,13 +737,8 @@ struct FishOperationOverlay: View {
                                     .font(.custom("Unbounded-Regular", size: 18))
                                     .foregroundStyle(Color(red: 0.53, green: 0.45, blue: 0.70).opacity(0.5))
                             }
-                            TextField("", text: $quantityText)
-                                .keyboardType(.numberPad)
-                                .focused($isQuantityFocused)
+                            NumericTextField(text: $quantityText, keyboardType: .numberPad)
                                 .font(.custom("Unbounded-Regular", size: 18))
-                                .fontWeight(.bold)
-                                .foregroundStyle(Color(red: 0.53, green: 0.45, blue: 0.70))
-                                .singleLineScaled(0.6)
                         }
                         Image(systemName: "pencil")
                             .font(.custom("Unbounded-Regular", size: 22))

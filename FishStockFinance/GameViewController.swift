@@ -1,45 +1,37 @@
-//
-//  GameViewController.swift
-//  FishStockFinance
-//
-//  Created by test on 05.03.2026.
-//
-
 import UIKit
-import SpriteKit
-import GameplayKit
+import SwiftUI
 
 class GameViewController: UIViewController {
+    private var hostingController: UIHostingController<AppRootView>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let view = self.view as! SKView? {
-            // Load the SKScene from 'GameScene.sks'
-            if let scene = SKScene(fileNamed: "GameScene") {
-                // Set the scale mode to scale to fit the window
-                scene.scaleMode = .aspectFill
-                
-                // Present the scene
-                view.presentScene(scene)
-            }
-            
-            view.ignoresSiblingOrder = true
-            
-            view.showsFPS = true
-            view.showsNodeCount = true
-        }
+        let rootView = AppRootView(store: AppContext.shared.store)
+        let hostingController = UIHostingController(rootView: rootView)
+        hostingController.view.isUserInteractionEnabled = true
+        hostingController.view.isMultipleTouchEnabled = false
+
+        addChild(hostingController)
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(hostingController.view)
+
+        NSLayoutConstraint.activate([
+            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
+        hostingController.didMove(toParent: self)
+        self.hostingController = hostingController
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return .allButUpsideDown
-        } else {
-            return .all
-        }
+        .all
     }
 
     override var prefersStatusBarHidden: Bool {
-        return true
+        false
     }
 }

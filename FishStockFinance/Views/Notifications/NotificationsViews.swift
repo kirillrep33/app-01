@@ -206,6 +206,8 @@ struct ReminderFormView: View {
     var body: some View {
             AppBackground {
                 GeometryReader { geometry in
+                    let scale = scaleForScreen(size: geometry.size)
+
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 0) {
                             GeometryReader { _ in
@@ -225,12 +227,12 @@ struct ReminderFormView: View {
 
                                     Spacer()
 
-                            Text(mode.title)
-                                .font(.custom("Unbounded-Regular", size: 22))
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 5)
-                                .singleLineScaled(0.5)
+                                    Text(mode.title)
+                                        .font(.custom("Unbounded-Regular", size: 22))
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.white)
+                                        .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 5)
+                                        .singleLineScaled(0.5)
 
                                     Spacer()
 
@@ -353,6 +355,8 @@ struct ReminderFormView: View {
                         .padding(.top, 20)
                     }
                     .verticalBounceBasedOnSizeIfAvailable()
+                    .scaleEffect(scale)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
         }
         .onAppear(perform: setup)
@@ -386,5 +390,20 @@ struct ReminderFormView: View {
         name = reminder.name
         details = reminder.details
         date = reminder.date
+    }
+
+    private func scaleForScreen(size: CGSize) -> CGFloat {
+        let requiredHeight: CGFloat = 720
+        let topPadding: CGFloat = isCompactPhone ? 80 : 110
+        let bottomPadding: CGFloat = isCompactPhone ? 24 : 40
+        let availableHeight = size.height - topPadding - bottomPadding
+        let heightScale = min(1.0, availableHeight / requiredHeight)
+
+        let horizontalPadding: CGFloat = isCompactPhone ? 24 : 36
+        let widthScale = min(1.0, (size.width - horizontalPadding) / 404)
+
+        let scale = min(heightScale, widthScale)
+        let minScale: CGFloat = isCompactPhone ? 0.7 : 0.8
+        return max(minScale, scale)
     }
 }

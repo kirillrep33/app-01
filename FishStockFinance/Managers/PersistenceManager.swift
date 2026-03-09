@@ -27,8 +27,10 @@ final class PersistenceManager {
     func save(state: PersistedState) {
         guard let url = fileURL() else { return }
 
-        if let data = try? encoder.encode(state) {
-            try? data.write(to: url, options: [.atomic])
+        do {
+            let data = try encoder.encode(state)
+            try data.write(to: url, options: [.atomic])
+        } catch {
         }
     }
 

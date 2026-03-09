@@ -176,65 +176,72 @@ struct SaleDetailView: View {
     let onEdit: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    
+    private var isCompactPhone: Bool {
+        UIScreen.main.bounds.width <= 350
+    }
 
     var body: some View {
         AppBackground {
-            VStack(spacing: 16) {
-                ScreenTitleView(title: "\(sale.species) sale", showBack: true) {
-                    dismiss()
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(sale.species)
-                            .font(.custom("Unbounded-Regular", size: 42))
-                            .fontWeight(.heavy)
-                        Text("Weight: \(Formatters.number(sale.weightKg)) kg")
-                            .font(.custom("Unbounded-Regular", size: 17))
-                        Text("\(Formatters.number(sale.totalPrice)) lbs")
-                            .font(.custom("Unbounded-Regular", size: 20))
-                            .fontWeight(.bold)
-                        Text("Date: \(Formatters.date.string(from: sale.date))")
-                            .font(.custom("Unbounded-Regular", size: 17))
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 16) {
+                    ScreenTitleView(title: "\(sale.species) sale", showBack: true) {
+                        dismiss()
                     }
-                }
-                .padding(.horizontal, 20)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
 
-                GlassCard {
-                    HStack {
-                        Text("Buyer:")
-                        Spacer()
-                        Text(sale.buyer)
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(sale.species)
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 32 : 42))
+                                .fontWeight(.heavy)
+                            Text("Weight: \(Formatters.number(sale.weightKg)) kg")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 15 : 17))
+                            Text("\(Formatters.number(sale.totalPrice)) lbs")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 20))
+                                .fontWeight(.bold)
+                            Text("Date: \(Formatters.date.string(from: sale.date))")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 15 : 17))
+                        }
                     }
-                }
-                .padding(.horizontal, 20)
+                    .padding(.horizontal, 20)
 
-                GlassCard {
-                    HStack {
-                        Text("Category:")
-                        Spacer()
-                        Text(sale.category.rawValue)
+                    GlassCard {
+                        HStack {
+                            Text("Buyer:")
+                            Spacer()
+                            Text(sale.buyer)
+                        }
                     }
-                }
-                .padding(.horizontal, 20)
+                    .padding(.horizontal, 20)
 
-                GlassCard {
-                    HStack {
-                        Spacer()
-                        Text("\(Formatters.number(sale.pricePerKg)) pounds/kg")
-                            .font(.custom("Unbounded-Regular", size: 22))
-                            .fontWeight(.bold)
+                    GlassCard {
+                        HStack {
+                            Text("Category:")
+                            Spacer()
+                            Text(sale.category.rawValue)
+                        }
                     }
+                    .padding(.horizontal, 20)
+
+                    GlassCard {
+                        HStack {
+                            Spacer()
+                            Text("\(Formatters.number(sale.pricePerKg)) pounds/kg")
+                                .font(.custom("Unbounded-Regular", size: isCompactPhone ? 18 : 22))
+                                .fontWeight(.bold)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 24)
+
+                    PrimaryActionButton(title: "Edit", action: onEdit)
+                        .padding(.horizontal, 20)
+
+                    Spacer(minLength: 80)
                 }
-                .padding(.horizontal, 20)
-
-                Spacer()
-
-                PrimaryActionButton(title: "Edit", action: onEdit)
-
-                Spacer(minLength: 40)
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -348,7 +355,7 @@ struct SaleFormView: View {
                         }
                         .frame(height: 70)
 
-                        VStack(alignment: .leading, spacing: isCompactPhone ? 10 : 20) {
+                        VStack(alignment: .leading, spacing: isCompactPhone ? 8 : 18) {
                     fieldSection(label: "Species") {
                         Menu {
                             ForEach([species] + mode.speciesOptions.filter { !$0.isEmpty && $0 != species }, id: \.self) { option in
@@ -383,13 +390,7 @@ struct SaleFormView: View {
                                         .font(.custom("Unbounded-Regular", size: isCompactPhone ? 15 : 17))
                                         .foregroundStyle(Color.black.opacity(0.5))
                                 }
-                                TextField("", text: $weight)
-                                    .focused($focusedField, equals: .weight)
-                                    .keyboardType(.decimalPad)
-                                    .font(.custom("Unbounded-Regular", size: isCompactPhone ? 15 : 17))
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.black)
-                                    .singleLineScaled(0.6)
+                                NumericTextField(text: $weight, keyboardType: .decimalPad)
                             }
                             Spacer()
                             if !weight.isEmpty {
@@ -412,13 +413,7 @@ struct SaleFormView: View {
                                         .font(.custom("Unbounded-Regular", size: isCompactPhone ? 15 : 17))
                                         .foregroundStyle(Color.black.opacity(0.5))
                                 }
-                                TextField("", text: $price)
-                                    .focused($focusedField, equals: .price)
-                                    .keyboardType(.decimalPad)
-                                    .font(.custom("Unbounded-Regular", size: isCompactPhone ? 15 : 17))
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.black)
-                                    .singleLineScaled(0.6)
+                                NumericTextField(text: $price, keyboardType: .decimalPad)
                             }
                             Spacer()
                             Image(systemName: "pencil")
@@ -538,11 +533,16 @@ struct SaleFormView: View {
                             .transition(.opacity)
                         }
 
-                        Color.clear
-                            .frame(height: 300)
+                        // Небольшой запас снизу вместо жёсткого отступа 300pt,
+                        // чтобы все элементы влезали на SE без необходимости скролла.
+                        Spacer(minLength: isCompactPhone ? 32 : 64)
                     }
                 }
                 .verticalBounceBasedOnSizeIfAvailable()
+                // Масштабируем содержимое от верхнего края, чтобы при уменьшении формы
+                // верх не «отъезжал» вниз и не появлялся лишний отступ.
+                .scaleEffect(scale, anchor: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
                 
                 if isDatePickerExpanded {
@@ -572,18 +572,20 @@ struct SaleFormView: View {
     }
 
     private func scaleForScreen(size: CGSize) -> CGFloat {
-        let requiredHeight: CGFloat = isDatePickerExpanded ? 900 : 600
-        let topPadding: CGFloat = isCompactPhone ? 110 : 150
-        let bottomPadding: CGFloat = isCompactPhone ? 20 : 40
+        // Высота, под которую разрабатывался макет формы New sale.
+        let requiredHeight: CGFloat = 780
+        let topPadding: CGFloat = isCompactPhone ? 80 : 110
+        let bottomPadding: CGFloat = isCompactPhone ? 24 : 40
         let availableHeight = size.height - topPadding - bottomPadding
         let heightScale = min(1.0, availableHeight / requiredHeight)
         
         let horizontalPadding: CGFloat = isCompactPhone ? 24 : 36
         let widthScale = min(1.0, (size.width - horizontalPadding) / 404)
-        
-        let scale = min(heightScale, widthScale)
-        let minScale: CGFloat = isCompactPhone ? 0.7 : 0.75
-        return max(minScale, scale)
+
+        // Масштаб выбираем минимальный по высоте и ширине,
+        // без минимального порога — так на SE контент гарантированно влезает
+        // целиком и не требует скролла.
+        return min(heightScale, widthScale)
     }
 
     private func setup() {

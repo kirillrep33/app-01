@@ -10,6 +10,8 @@ struct StatisticsView: View {
     var body: some View {
         AppBackground {
             GeometryReader { geometry in
+                let scale = scaleForScreen(size: geometry.size)
+
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 16) {
                         ScreenTitleView(title: "Statistics")
@@ -33,6 +35,8 @@ struct StatisticsView: View {
                     .padding(.bottom, 24)
                 }
                 .verticalBounceBasedOnSizeIfAvailable()
+                .scaleEffect(scale)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
     }
@@ -622,5 +626,20 @@ struct StatisticsView: View {
         return zip(angles, radii).map { angle, radius in
             CGSize(width: cos(angle) * radius, height: sin(angle) * radius)
         }
+    }
+
+    private func scaleForScreen(size: CGSize) -> CGFloat {
+        let requiredHeight: CGFloat = 900
+        let topPadding: CGFloat = isCompactPhone ? 80 : 120
+        let bottomPadding: CGFloat = isCompactPhone ? 32 : 48
+        let availableHeight = size.height - topPadding - bottomPadding
+        let heightScale = min(1.0, availableHeight / requiredHeight)
+
+        let horizontalPadding: CGFloat = isCompactPhone ? 20 : 32
+        let widthScale = min(1.0, (size.width - horizontalPadding) / size.width)
+
+        let scale = min(heightScale, widthScale)
+        let minScale: CGFloat = isCompactPhone ? 0.8 : 0.9
+        return max(minScale, scale)
     }
 }

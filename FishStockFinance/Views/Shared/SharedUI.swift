@@ -66,6 +66,7 @@ struct AppBackground<Content: View>: View {
         }
     }
 }
+
 func withButtonSound(_ action: @escaping () -> Void) -> () -> Void {
     return {
         SoundManager.shared.playButtonSound()
